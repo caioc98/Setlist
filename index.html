@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#0f1115" />
+<title>Setlist — músicas pra aprender</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="topo">
+  <div class="topo-linha">
+    <h1>🎸 Setlist</h1>
+    <div class="acoes-topo">
+      <button id="btn-importar" class="btn ghost" type="button">Importar lista</button>
+      <button id="btn-dados" class="btn ghost" type="button">Backup</button>
+    </div>
+  </div>
+  <div class="progresso">
+    <div class="barra"><div id="barra-preenchida"></div></div>
+    <span id="progresso-texto">0 de 0 aprendidas</span>
+  </div>
+</header>
+
+<main>
+  <form id="form-add" class="card form-add" autocomplete="off">
+    <input id="in-titulo" type="text" placeholder="Música" required />
+    <input id="in-artista" type="text" placeholder="Artista" />
+    <select id="in-status"></select>
+    <button class="btn primary" type="submit">Adicionar</button>
+  </form>
+
+  <section class="filtros">
+    <input id="busca" type="search" placeholder="Buscar música ou artista…" />
+    <div id="chips" class="chips"></div>
+    <div class="linha-opcoes">
+      <label>Ordenar
+        <select id="ordenar">
+          <option value="status">por status</option>
+          <option value="titulo">por música</option>
+          <option value="artista">por artista</option>
+          <option value="recentes">mais recentes</option>
+        </select>
+      </label>
+      <label class="check-inline">
+        <input id="esconder-aprendidas" type="checkbox" />
+        Esconder aprendidas
+      </label>
+    </div>
+  </section>
+
+  <section id="lista" class="lista"></section>
+  <p id="vazio" class="vazio" hidden></p>
+</main>
+
+<dialog id="dlg-importar">
+  <form method="dialog" class="dlg-fechar"><button class="btn ghost" value="cancel">✕</button></form>
+  <h2>Importar lista</h2>
+  <p class="ajuda">
+    Cola aqui uma música por linha. Aceita <code>Artista - Música</code>,
+    <code>Música - Artista</code>, CSV do Exportify e links do Spotify.
+  </p>
+  <textarea id="txt-importar" rows="10" placeholder="Legião Urbana - Tempo Perdido&#10;Djavan - Oceano&#10;…"></textarea>
+  <div class="linha-opcoes">
+    <label>Formato da linha
+      <select id="ordem-importar">
+        <option value="artista-titulo">Artista - Música</option>
+        <option value="titulo-artista">Música - Artista</option>
+      </select>
+    </label>
+    <label>Status inicial
+      <select id="status-importar"></select>
+    </label>
+  </div>
+  <p id="previa-importar" class="ajuda"></p>
+  <div class="dlg-acoes">
+    <button id="btn-confirmar-importar" class="btn primary" type="button">Importar</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-dados">
+  <form method="dialog" class="dlg-fechar"><button class="btn ghost" value="cancel">✕</button></form>
+  <h2>Backup dos dados</h2>
+  <p class="ajuda">Tudo fica salvo no navegador deste aparelho. Exporta de vez em quando pra não perder.</p>
+  <div class="dlg-acoes coluna">
+    <button id="btn-exportar-json" class="btn" type="button">Baixar JSON</button>
+    <button id="btn-exportar-md" class="btn" type="button">Copiar checklist em Markdown</button>
+    <label class="btn arquivo">
+      Restaurar de um JSON
+      <input id="in-arquivo" type="file" accept="application/json" hidden />
+    </label>
+    <button id="btn-seed" class="btn ghost" type="button">Puxar músicas do repositório</button>
+    <button id="btn-limpar" class="btn perigo" type="button">Apagar tudo</button>
+  </div>
+  <p id="msg-dados" class="ajuda"></p>
+</dialog>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="seed.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
