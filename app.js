@@ -56,6 +56,8 @@ function preencherSelects() {
   $('#in-status').value = STATUS_PADRAO;
   $('#status-importar').innerHTML = opcoes;
   $('#status-importar').value = STATUS_PADRAO;
+  $('#status-spotify').innerHTML = opcoes;
+  $('#status-spotify').value = STATUS_PADRAO;
 }
 
 function renderChips() {
@@ -311,6 +313,164 @@ function mesclar(itens) {
   return n;
 }
 
+/* ---------------- Spotify ---------------- */
+
+const SP = window.SetlistSpotify;
+let faixasSpotify = [];
+
+const passoSpotify = nome => document.querySelectorAll('#dlg-spotify [data-passo]')
+  .forEach(el => { el.hidden = el.dataset.passo !== nome; });
+
+function msgSpotify(texto, erro = false) {
+  const el = $('#msg-spotify');
+  el.textContent = texto || '';
+  el.classList.toggle('erro', !!erro);
+}
+
+/* Mostra o passo certo: sem suporte → sem Client ID → sem login → playlists. */
+function abrirSpotify() {
+  msgSpotify('');
+  $('#redirect-uri').textContent = SP.redirectUri();
+  $('#in-client-id').value = SP.clientId();
+
+  if (!SP.suportado()) passoSpotify('sem-suporte');
+  else if (!SP.clientId()) passoSpotify('config');
+  else if (!SP.conectado()) passoSpotify('conectar');
+  else { passoSpotify('playlists'); carregarPlaylists(); }
+
+  if (!$('#dlg-spotify').open) $('#dlg-spotify').showModal();
+}
+
+function erroSpotify(e) {
+  msgSpotify(e.message || 'Deu ruim ao falar com o Spotify.', true);
+  if (/conecta|expirou/i.test(e.message || '')) { SP.desconectar(); passoSpotify('conectar'); }
+}
+
+async function carregarPlaylists() {
+  const alvo = $('#lista-playlists');
+  alvo.innerHTML = '<p class="ajuda" style="padding:.5rem">Carregando suas playlists…</p>';
+  try {
+    const lista = await SP.minhasPlaylists();
+    alvo.innerHTML = '';
+    if (!lista.length) { alvo.innerHTML = '<p class="ajuda" style="padding:.5rem">Nenhuma playlist nessa conta.</p>'; return; }
+    for (const p of lista) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'linha-playlist';
+      b.dataset.id = p.id;
+      b.innerHTML = `<span>${esc(p.nome)}</span><span class="meta">${p.total} faixa${p.total === 1 ? '' : 's'}</span>`;
+      alvo.appendChild(b);
+    }
+  } catch (e) {
+    alvo.innerHTML = '';
+    erroSpotify(e);
+  }
+}
+
+async function abrirPlaylist(id) {
+  passoSpotify('faixas');
+  $('#nome-playlist').textContent = 'Carregando…';
+  $('#lista-faixas').innerHTML = '';
+  faixasSpotify = [];
+  try {
+    const info = await SP.playlist(id);
+    $('#nome-playlist').textContent = info.nome;
+    faixasSpotify = await SP.faixas(id, (lidas, total) => msgSpotify(`Lendo ${lidas} de ${total} faixas…`));
+    msgSpotify('');
+    $('#marcar-todas').checked = true;
+    renderFaixas();
+  } catch (e) {
+    erroSpotify(e);
+  }
+}
+
+function renderFaixas() {
+  const existentes = new Set(musicas.map(assinatura));
+  const alvo = $('#lista-faixas');
+  alvo.innerHTML = '';
+  faixasSpotify.forEach((f, i) => {
+    const repetida = existentes.has(assinatura(normalizar(f)));
+    const linha = document.createElement('label');
+    linha.className = 'linha-faixa' + (repetida ? ' repetida' : '');
+    linha.innerHTML = `
+      <input type="checkbox" data-i="${i}" ${repetida ? '' : 'checked'} />
+      <span class="nome">${esc(f.titulo)}${f.artista ? ` <span class="art">— ${esc(f.artista)}</span>` : ''}</span>
+      ${repetida ? '<span class="aviso">já na lista</span>' : ''}`;
+    alvo.appendChild(linha);
+  });
+  if (!faixasSpotify.length) alvo.innerHTML = '<p class="ajuda" style="padding:.5rem">Playlist vazia.</p>';
+  contarSelecionadas();
+}
+
+const selecionadas = () => [...document.querySelectorAll('#lista-faixas input:checked')].map(c => faixasSpotify[+c.dataset.i]);
+
+function contarSelecionadas() {
+  const caixas = document.querySelectorAll('#lista-faixas input[type=checkbox]');
+  const n = selecionadas().length;
+  $('#marcar-todas').checked = n > 0 && n === caixas.length;
+  $('#btn-importar-spotify').textContent = n ? `Importar ${n}` : 'Importar';
+  $('#btn-importar-spotify').disabled = !n;
+}
+
+$('#btn-spotify').addEventListener('click', abrirSpotify);
+
+$('#btn-copiar-uri').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(SP.redirectUri()); msgSpotify('Redirect URI copiado.'); }
+  catch (e) { msgSpotify('Copia na mão: ' + SP.redirectUri()); }
+});
+
+$('#btn-salvar-client').addEventListener('click', () => {
+  const id = $('#in-client-id').value.trim();
+  if (!id) { msgSpotify('Cola o Client ID.', true); return; }
+  SP.definirClientId(id);
+  msgSpotify('');
+  passoSpotify('conectar');
+});
+
+$('#btn-trocar-client').addEventListener('click', () => { msgSpotify(''); passoSpotify('config'); });
+
+$('#btn-conectar').addEventListener('click', async () => {
+  try { await SP.login(); } catch (e) { msgSpotify(e.message, true); }
+});
+
+$('#btn-desconectar').addEventListener('click', () => {
+  SP.desconectar();
+  msgSpotify('Desconectado.');
+  passoSpotify('conectar');
+});
+
+$('#lista-playlists').addEventListener('click', e => {
+  const linha = e.target.closest('.linha-playlist');
+  if (linha) { msgSpotify(''); abrirPlaylist(linha.dataset.id); }
+});
+
+$('#btn-abrir-playlist').addEventListener('click', () => {
+  const id = SP.idDaPlaylist($('#in-playlist-url').value);
+  if (!id) { msgSpotify('Não reconheci esse link de playlist.', true); return; }
+  msgSpotify('');
+  abrirPlaylist(id);
+});
+
+$('#in-playlist-url').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); $('#btn-abrir-playlist').click(); }
+});
+
+$('#btn-voltar').addEventListener('click', () => { msgSpotify(''); passoSpotify('playlists'); });
+
+$('#marcar-todas').addEventListener('change', e => {
+  document.querySelectorAll('#lista-faixas input[type=checkbox]').forEach(c => { c.checked = e.target.checked; });
+  contarSelecionadas();
+});
+
+$('#lista-faixas').addEventListener('change', contarSelecionadas);
+
+$('#btn-importar-spotify').addEventListener('click', () => {
+  const status = $('#status-spotify').value;
+  const n = mesclar(selecionadas().map(f => normalizar({ ...f, status })));
+  $('#dlg-spotify').close();
+  toast(n ? `${n} música${n === 1 ? '' : 's'} importada${n === 1 ? '' : 's'} do Spotify.` : 'Nada novo pra importar.');
+});
+
 /* ---------------- backup ---------------- */
 
 $('#btn-dados').addEventListener('click', () => { $('#msg-dados').textContent = ''; $('#dlg-dados').showModal(); });
@@ -387,3 +547,8 @@ function toast(msg) {
 preencherSelects();
 render();
 salvar();
+
+/* Se a página abriu voltando do Spotify (?code=...), completa o login. */
+SP.init()
+  .then(logou => { if (logou) abrirSpotify(); })
+  .catch(e => { abrirSpotify(); msgSpotify(e.message, true); });

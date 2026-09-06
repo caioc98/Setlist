@@ -13,7 +13,8 @@
   <div class="topo-linha">
     <h1>🎸 Setlist</h1>
     <div class="acoes-topo">
-      <button id="btn-importar" class="btn ghost" type="button">Importar lista</button>
+      <button id="btn-spotify" class="btn ghost" type="button">Spotify</button>
+      <button id="btn-importar" class="btn ghost" type="button">Importar</button>
       <button id="btn-dados" class="btn ghost" type="button">Backup</button>
     </div>
   </div>
@@ -53,6 +54,72 @@
   <section id="lista" class="lista"></section>
   <p id="vazio" class="vazio" hidden></p>
 </main>
+
+<dialog id="dlg-spotify">
+  <form method="dialog" class="dlg-fechar"><button class="btn ghost" value="cancel">✕</button></form>
+  <h2>Abrir playlist do Spotify</h2>
+
+  <div data-passo="sem-suporte" hidden>
+    <p class="ajuda">
+      O login do Spotify precisa da página aberta por <code>http</code> ou <code>https</code> —
+      abrindo o arquivo direto (<code>file://</code>) ele não funciona.
+      Publica a pasta no GitHub Pages, ou roda <code>npx serve</code> aqui dentro e abre
+      <code>http://127.0.0.1:3000</code>. Enquanto isso dá pra usar o <b>Importar</b>.
+    </p>
+  </div>
+
+  <div data-passo="config" hidden>
+    <p class="ajuda">Uma vez só: o app precisa de um Client ID seu (grátis, uns 2 minutos).</p>
+    <ol class="ajuda passos">
+      <li>Abre o <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">Spotify Developer Dashboard</a> e clica em <b>Create app</b>.</li>
+      <li>Em <b>Redirect URI</b>, cola exatamente isto e clica <b>Add</b>:
+        <span class="uri"><code id="redirect-uri"></code><button id="btn-copiar-uri" class="btn ghost" type="button">copiar</button></span>
+      </li>
+      <li>Marca <b>Web API</b>, salva e copia o <b>Client ID</b> da tela de settings.</li>
+    </ol>
+    <div class="linha-busca">
+      <input id="in-client-id" type="text" placeholder="Client ID" autocomplete="off" />
+      <button id="btn-salvar-client" class="btn primary" type="button">Salvar</button>
+    </div>
+  </div>
+
+  <div data-passo="conectar" hidden>
+    <p class="ajuda">Client ID salvo. Agora é só autorizar a leitura das suas playlists.</p>
+    <div class="dlg-acoes">
+      <button id="btn-trocar-client" class="btn ghost" type="button">Trocar Client ID</button>
+      <button id="btn-conectar" class="btn primary" type="button">Conectar com o Spotify</button>
+    </div>
+  </div>
+
+  <div data-passo="playlists" hidden>
+    <div class="linha-busca">
+      <input id="in-playlist-url" type="text" placeholder="Link da playlist" autocomplete="off" />
+      <button id="btn-abrir-playlist" class="btn" type="button">Abrir</button>
+    </div>
+    <p class="ajuda">ou escolhe uma das suas:</p>
+    <div id="lista-playlists" class="rolagem"></div>
+    <div class="dlg-acoes">
+      <button id="btn-desconectar" class="btn ghost" type="button">Desconectar</button>
+    </div>
+  </div>
+
+  <div data-passo="faixas" hidden>
+    <div class="cabeca-faixas">
+      <button id="btn-voltar" class="btn ghost" type="button">←</button>
+      <strong id="nome-playlist"></strong>
+    </div>
+    <div class="linha-opcoes">
+      <label class="check-inline"><input id="marcar-todas" type="checkbox" checked /> Marcar todas</label>
+      <label>Status <select id="status-spotify"></select></label>
+    </div>
+    <div id="lista-faixas" class="rolagem"></div>
+    <div class="dlg-acoes">
+      <button id="btn-importar-spotify" class="btn primary" type="button">Importar</button>
+    </div>
+  </div>
+
+  <p id="msg-spotify" class="ajuda"></p>
+</dialog>
 
 <dialog id="dlg-importar">
   <form method="dialog" class="dlg-fechar"><button class="btn ghost" value="cancel">✕</button></form>
@@ -99,6 +166,7 @@
 <div id="toast" class="toast" hidden></div>
 
 <script src="seed.js"></script>
+<script src="spotify.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

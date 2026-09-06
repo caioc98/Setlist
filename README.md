@@ -24,9 +24,38 @@ instalação: abre o `index.html` e usa. Os dados ficam salvos no próprio naveg
 | Boa | roxo | vale a pena aprender um dia |
 | Ótimo | verde | tá redonda, só manter |
 
-## Importar do Spotify
+## Abrir playlist do Spotify
 
-Botão **Importar lista**. Cola uma música por linha — o app aceita:
+Botão **Spotify**: conecta na conta, lista as tuas playlists, mostra as faixas e
+importa as que você marcar (com o status que escolher). Também aceita link de
+playlist colado — inclusive de playlist pública de outra pessoa.
+
+O app é estático, então o login é o fluxo oficial **OAuth PKCE** do Spotify: roda
+todo no navegador, sem servidor e sem client secret. Só precisa de um Client ID
+seu, uma vez:
+
+1. Abre o [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) → **Create app**.
+2. Em **Redirect URI**, cola o endereço exato que o app mostra na tela (ele calcula
+   sozinho a partir da URL aberta) e clica **Add**.
+3. Marca **Web API**, salva, copia o **Client ID** e cola no app.
+
+Detalhes que valem saber:
+
+- O login exige a página servida por **http(s)** — abrindo o `index.html` direto
+  (`file://`) o Spotify recusa o redirect. Use GitHub Pages, ou `npx serve` e
+  abra `http://127.0.0.1:3000` (o Spotify aceita `127.0.0.1`, não `localhost`).
+- Permissões pedidas: só leitura de playlists
+  (`playlist-read-private`, `playlist-read-collaborative`).
+- O token fica no `localStorage` deste aparelho e se renova sozinho; **Desconectar**
+  apaga. Nada é enviado pra lugar nenhum além do próprio Spotify.
+- Playlists de qualquer tamanho: a leitura é paginada de 100 em 100 faixas.
+  Episódios de podcast e faixas locais sem dados são ignorados.
+- Faixas que já estão na lista aparecem marcadas como *já na lista* e vêm
+  desmarcadas, então dá pra reimportar a playlist depois sem duplicar nada.
+
+## Importar lista na mão
+
+Botão **Importar**. Cola uma música por linha — o app aceita:
 
 - `Artista - Música` ou `Música - Artista` (escolhe o formato no seletor)
 - CSV do [Exportify](https://exportify.net) (colunas `Track Name` / `Artist Name(s)`)
@@ -36,11 +65,8 @@ Botão **Importar lista**. Cola uma música por linha — o app aceita:
 Duplicadas não entram: a comparação é por título + artista, ignorando acento e
 maiúscula.
 
-### Como tirar a lista do Spotify
-
-1. **Exportify** (mais fácil): entra em exportify.net, conecta a conta, exporta a
-   playlist em CSV, abre o arquivo e cola o conteúdo inteiro no campo de importação.
-2. **Na mão**: no app do computador, seleciona as faixas (Ctrl/Cmd + A), copia e cola.
+Serve pra lista que veio de qualquer lugar: caderno, WhatsApp, CSV do
+[Exportify](https://exportify.net), print de setlist etc.
 
 ## Backup
 
@@ -58,5 +84,6 @@ Botão **Backup**:
 | --- | --- |
 | `index.html` | estrutura da página |
 | `styles.css` | estilo (tema escuro) |
-| `app.js` | toda a lógica: estado, filtros, importação, backup |
+| `app.js` | estado, filtros, importação, backup e a tela do Spotify |
+| `spotify.js` | login PKCE e leitura da Web API do Spotify |
 | `seed.js` | lista inicial versionada no repositório |
