@@ -132,11 +132,35 @@ window.SetlistSpotify = (() => {
       gravar(CHAVE_TOKEN, { ...guardado, expira_em: 0 });
       resp = await fetch(url, { headers: { Authorization: `Bearer ${await token()}` } });
     }
-    if (resp.status === 404) throw new Error('Playlist não encontrada. Confere o link.');
-    if (resp.status === 403) throw new Error('Sem acesso a essa playlist com essa conta.');
+    if (resp.ok) return resp.json();
+
+    /* O Spotify explica o motivo no corpo; sem isso o 403 vira adivinhação. */
+    const corpo = await resp.json().catch(() => null);
+    const detalhe = ((corpo || {}).error || {}).message || '';
+
+    if (resp.status === 403 && /registered|development mode/i.test(detalhe)) {
+      throw new Error('Essa conta do Spotify não está liberada no seu app do dashboard. '
+        + 'Abre o app em developer.spotify.com/dashboard → Settings → User Management e '
+        + 'adiciona o e-mail da conta que você conectou.');
+    }
+    if (resp.status === 404) {
+      throw new Error('Playlist não encontrada. Confere o link — e lembra que playlist feita '
+        + 'pelo Spotify (Daily Mix, Descobertas da Semana, "Esta é…") a API não abre.'
+        + (detalhe ? ` Spotify: “${detalhe}”.` : ''));
+    }
+    if (resp.status === 403) {
+      throw new Error('Sem acesso a essa playlist com essa conta.'
+        + (detalhe ? ` Spotify: “${detalhe}”.` : ''));
+    }
     if (resp.status === 429) throw new Error('O Spotify pediu pra esperar um pouco. Tenta de novo em instantes.');
-    if (!resp.ok) throw new Error(`Spotify respondeu ${resp.status}.`);
-    return resp.json();
+    throw new Error(`Spotify respondeu ${resp.status}.` + (detalhe ? ` “${detalhe}”.` : ''));
+  }
+
+  /* Quem está conectado — usado pra separar "app/conta sem acesso" de
+     "essa playlist específica". */
+  async function eu() {
+    const dados = await api('/me');
+    return dados.display_name || dados.id || 'sua conta';
   }
 
   /* Segue o campo `next` até acabar a playlist. */
@@ -191,5 +215,5 @@ window.SetlistSpotify = (() => {
     }).filter(Boolean);
   }
 
-  return { clientId, definirClientId, conectado, suportado, redirectUri, login, desconectar, init, minhasPlaylists, playlist, faixas, idDaPlaylist };
+  return { clientId, definirClientId, conectado, suportado, redirectUri, login, desconectar, init, eu, minhasPlaylists, playlist, faixas, idDaPlaylist };
 })();

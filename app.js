@@ -405,6 +405,14 @@ async function abrirPlaylist(id) {
     renderFaixas();
   } catch (e) {
     erroSpotify(e);
+    /* Se a conta responde, o problema é a playlist — e saber com qual conta
+       você entrou costuma ser a resposta. */
+    if (/acesso|não encontrada/i.test(e.message || '')) {
+      try {
+        const quem = await SP.eu();
+        msgSpotify(`${e.message} Você está conectado como ${quem} — se a playlist é de outra conta, ela precisa estar pública.`, true);
+      } catch (_) { /* mantém a mensagem original */ }
+    }
   }
 }
 
