@@ -18,8 +18,10 @@ window.SetlistSpotify = (() => {
 
   const clientId = () => ler(CHAVE_CLIENT) || '';
   const conectado = () => !!(ler(CHAVE_TOKEN) || {}).refresh_token;
-  /* OAuth exige http/https: em file:// o Spotify recusa o redirect. */
-  const suportado = () => location.protocol === 'http:' || location.protocol === 'https:';
+  /* OAuth exige http/https (em file:// o Spotify recusa o redirect) e uma
+     página que possa chamar a API — o que a versão hospedada não permite. */
+  const suportado = () => !window.SETLIST_SEM_REDE &&
+    (location.protocol === 'http:' || location.protocol === 'https:');
   const redirectUri = () => location.origin + location.pathname;
 
   function definirClientId(id) {

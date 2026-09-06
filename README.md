@@ -4,10 +4,18 @@ Checklist das músicas que eu preciso aprender. Página única, sem servidor e s
 instalação: abre o `index.html` e usa. Os dados ficam salvos no próprio navegador
 (`localStorage`).
 
-## Como usar
+## Onde roda
 
-- **Abrir**: dá duplo clique em `index.html`, ou publica a pasta no GitHub Pages
-  (Settings → Pages → branch da pasta raiz) pra usar do celular.
+| Versão | Como abrir | Spotify | Onde salva |
+| --- | --- | --- | --- |
+| Local | duplo clique no `index.html` | não (o Spotify exige http/https) | neste navegador |
+| GitHub Pages | Settings → Pages → branch, pasta raiz | sim, completo | neste navegador |
+| Hospedada (Artifact) | link publicado pelo Claude | não (a sandbox bloqueia a API) | sincroniza entre aparelhos |
+
+A versão hospedada sai de `node tools/build-artifact.js`, que junta os mesmos
+arquivos num HTML só (em `dist/`) e liga a sincronização entre aparelhos.
+
+## Como usar
 - **Adicionar**: música + artista + status, botão *Adicionar*.
 - **Marcar como aprendida**: a caixinha à esquerda. A barra no topo mostra o progresso.
 - **Detalhes**: clica no nome da música pra abrir tom, notas, link e o botão de remover.
@@ -87,3 +95,4 @@ Botão **Backup**:
 | `app.js` | estado, filtros, importação, backup e a tela do Spotify |
 | `spotify.js` | login PKCE e leitura da Web API do Spotify |
 | `seed.js` | lista inicial versionada no repositório |
+| `tools/build-artifact.js` | gera a versão hospedada (arquivo único) |

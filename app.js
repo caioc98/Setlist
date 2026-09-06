@@ -28,8 +28,27 @@ function carregar() {
 }
 
 function salvar() {
+  /* Só uma mudança de verdade carimba a hora — é o que decide quem ganha
+     quando dois aparelhos sincronizam. */
+  localStorage.setItem(CHAVE + '.em', Date.now());
+  gravarLocal();
+  /* A versão hospedada pluga aqui pra sincronizar entre aparelhos. */
+  if (window.SETLIST_SINC) window.SETLIST_SINC(musicas);
+}
+
+function gravarLocal() {
   localStorage.setItem(CHAVE, JSON.stringify(musicas));
 }
+
+/* Usado por uma camada de sincronização externa, quando existir. */
+window.setlistLista = () => musicas;
+window.setlistChave = m => assinatura(m);
+window.setlistAtualizadoEm = () => Number(localStorage.getItem(CHAVE + '.em')) || 0;
+window.setlistAplicar = lista => {
+  musicas = (lista || []).map(normalizar);
+  gravarLocal();
+  render();
+};
 
 function normalizar(m) {
   return {
@@ -333,7 +352,12 @@ function abrirSpotify() {
   $('#redirect-uri').textContent = SP.redirectUri();
   $('#in-client-id').value = SP.clientId();
 
-  if (!SP.suportado()) passoSpotify('sem-suporte');
+  if (!SP.suportado()) {
+    passoSpotify('sem-suporte');
+    document.querySelectorAll('[data-motivo]').forEach(el => {
+      el.hidden = el.dataset.motivo !== (window.SETLIST_SEM_REDE ? 'hospedado' : 'arquivo');
+    });
+  }
   else if (!SP.clientId()) passoSpotify('config');
   else if (!SP.conectado()) passoSpotify('conectar');
   else { passoSpotify('playlists'); carregarPlaylists(); }
@@ -525,6 +549,8 @@ $('#btn-limpar').addEventListener('click', () => {
 });
 
 function baixar(nome, conteudo, tipo) {
+  /* A versão hospedada troca isto pelo salvamento mediado pelo viewer. */
+  if (window.SETLIST_BAIXAR) return window.SETLIST_BAIXAR(nome, conteudo, tipo);
   const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
   const a = document.createElement('a');
   a.href = url;
@@ -546,7 +572,7 @@ function toast(msg) {
 
 preencherSelects();
 render();
-salvar();
+gravarLocal();
 
 /* Se a página abriu voltando do Spotify (?code=...), completa o login. */
 SP.init()

@@ -60,7 +60,12 @@
   <h2>Abrir playlist do Spotify</h2>
 
   <div data-passo="sem-suporte" hidden>
-    <p class="ajuda">
+    <p class="ajuda" data-motivo="hospedado" hidden>
+      Esta é a versão hospedada, que roda numa caixa fechada e não pode falar com a
+      API do Spotify. Pra conectar a conta, usa a versão publicada no GitHub Pages
+      (mesmo app, mesmo código). Aqui dá pra usar o <b>Importar</b> normalmente.
+    </p>
+    <p class="ajuda" data-motivo="arquivo">
       O login do Spotify precisa da página aberta por <code>http</code> ou <code>https</code> —
       abrindo o arquivo direto (<code>file://</code>) ele não funciona.
       Publica a pasta no GitHub Pages, ou roda <code>npx serve</code> aqui dentro e abre
