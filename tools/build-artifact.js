@@ -87,7 +87,7 @@ const temClaude = () => window.claude && typeof claude.use === 'function';
 
 const html = ler('index.html');
 const corpo = html.split('<body>')[1].split('</body>')[0]
-  .replace(/\n?\s*<script src="([^"]+)"><\/script>/g, (_, arquivo) => `\n<script>\n${ler(arquivo)}\n</script>`)
+  .replace(/\n?\s*<script src="([^"]+)"><\/script>/g, (_, arquivo) => `\n<script>\n${ler(arquivo.split('?')[0])}\n</script>`)
   .replace(/<link rel="stylesheet"[^>]*>\n?/g, '')
   .trim();
 

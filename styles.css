@@ -177,3 +177,8 @@ dialog h2 { margin: 0 0 .5rem; font-size: 1.05rem; }
 #msg-spotify { margin-top: .8rem; }
 #msg-spotify.erro { color: #fca5a5; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.rodape {
+  max-width: 720px; margin: 2.5rem auto 0; padding: 0 1rem;
+  color: var(--texto-fraco); font-size: .72rem; text-align: center;
+}

@@ -12,6 +12,11 @@ instalação: abre o `index.html` e usa. Os dados ficam salvos no próprio naveg
 | GitHub Pages | Settings → Pages → branch, pasta raiz | sim, completo | neste navegador |
 | Hospedada (Artifact) | link publicado pelo Claude | não (a sandbox bloqueia a API) | sincroniza entre aparelhos |
 
+Depois de mexer em `app.js`, `spotify.js`, `styles.css` ou `seed.js`, roda
+`node tools/versionar.js`: ele carimba o hash do conteúdo nos `?v=` do
+`index.html` e no rodapé da página, então o GitHub Pages nunca serve o
+JavaScript velho do cache e dá pra conferir na tela qual versão está aberta.
+
 A versão hospedada sai de `node tools/build-artifact.js`, que junta os mesmos
 arquivos num HTML só (em `dist/`) e liga a sincronização entre aparelhos.
 
@@ -96,3 +101,4 @@ Botão **Backup**:
 | `spotify.js` | login PKCE e leitura da Web API do Spotify |
 | `seed.js` | lista inicial versionada no repositório |
 | `tools/build-artifact.js` | gera a versão hospedada (arquivo único) |
+| `tools/versionar.js` | carimba o hash do conteúdo nos assets (mata cache velho) |
